@@ -12,14 +12,22 @@ function App() {
   const[pagedUsers, setPagedUsers] = useState([]);
   const [show, setShow] = useState(false);
   let [message, setMessage] = useState("");
+  let pageNumber = [];
+  let pageRef = useRef(0);
+
+  for(let i = 1; i <= Math.ceil((users.length) / 2); i++) {
+    pageNumber.push(i);
+  }
+
+  console.log(pageNumber)
 
   const addPassedUser = user => {
     setUsers(prevUsers => {
       return [...prevUsers, { ...user, id: prevUsers.length }];
     });
     setMessage('User added successfuly');
+    setPagedUsers(paginationHandler(0));
     setShow(true);
-    this.pagination();
   };
   
 
@@ -31,7 +39,7 @@ function App() {
     setUsers(newUsers);
     setMessage('User deleted successfuly');
     setShow(true);
-    this.pagination();
+    setPagedUsers(paginationHandler(0));
   }
 
   const sort = sortBy => () => {
@@ -69,27 +77,34 @@ function App() {
     setPagedUsers(sortedArray);
   };
 
-  const pagination = (page = 0) => () => {
+  let pagination = (page = 1) => () => {
     let pageUsers = [...users];
-    pageUsers = pageUsers.slice(page * 2, (page + 1) * 2);
+    console.log(users, 'copy')
+    pageUsers = pageUsers.slice((page - 1) * 2, page * 2);
     console.log(pageUsers,'hy')
     setPagedUsers(pageUsers);
   }
 
+  function paginationHandler(page = 0) {
+    let pageUsers = [...users];
+    pageUsers = pageUsers.slice(page * 2, (page + 1) * 2);
+    setPagedUsers(pageUsers);
+  }
+
+
   useEffect(() => {
-    const users = JSON.parse(localStorage.getItem('users'));
-    if(users)  {
+    if(localStorage.getItem('users'))  {
+      const users = JSON.parse(localStorage.getItem('users'));
       setUsers(users);
-      pagination();
     }
   }, [])
 
   useEffect(() => {
     if (users.length) {
       localStorage.setItem("users", JSON.stringify(users));
-      pagination(0);
     }
-  })
+    paginationHandler(0);
+  }, [users])
 
   useEffect(() => {
     if (show.length) {
@@ -166,17 +181,14 @@ function App() {
         <Pagination>
           <Pagination.First />
           <Pagination.Prev />
-          <Pagination.Item active>{1}</Pagination.Item>
-          <Pagination.Ellipsis />
-
-          <Pagination.Item>{10}</Pagination.Item>
-          <Pagination.Item>{11}</Pagination.Item>
-          <Pagination.Item >{12}</Pagination.Item>
-          <Pagination.Item>{13}</Pagination.Item>
-          <Pagination.Item >{14}</Pagination.Item>
-
-          <Pagination.Ellipsis />
-          <Pagination.Item>{20}</Pagination.Item>
+          {
+            pageNumber.map((number, i) => {
+              return <Pagination.Item 
+                      onClick={pagination(number)}>
+                        {number}
+                      </Pagination.Item>
+            })
+          }
           <Pagination.Next />
           <Pagination.Last />
         </Pagination>
